@@ -1,18 +1,33 @@
 #include "main.h"
 #include "lemlib/api.hpp" // IWYU pragma: keep
 #include "lemlib/chassis/trackingWheel.hpp"
+#include "pros/abstract_motor.hpp"
+#include "pros/adi.hpp"
 #include "pros/motors.hpp"
+
+// check reversed motors, motor types
+
 
 pros::Controller master(pros::E_CONTROLLER_MASTER);
 
-pros::MotorGroup left_motors({1, 2, 3}); 
-pros::MotorGroup right_motors({4, 5, 6}); 
+pros::MotorGroup left_motors({1, 2, 3}, pros::v5::MotorGears::blue); 
+pros::MotorGroup right_motors({4, 5, 6},pros::v5::MotorGears::blue); 
 
 pros::Motor intake_motor_1(7);
 pros::Motor intake_motor_2(8);
-pros::Motor intake_motor_3(9);
 
-lemlib::Drivetrain drivetrain(&left_motors, 
+pros::Motor outake_motor_1(9);
+
+pros::adi::Pneumatics blocker1('C', false);
+pros::adi::Pneumatics blocker2('D', false);
+pros::adi::Pneumatics intake1('E', false);
+pros::adi::Pneumatics lift('F', false);
+pros::adi::Pneumatics tounge('G', false);
+
+
+
+lemlib::Drivetrain drivetrain(
+	&left_motors, 
 	&right_motors, 
 	10, // change
 	lemlib::Omniwheel::NEW_275, 
@@ -23,7 +38,8 @@ lemlib::Drivetrain drivetrain(&left_motors,
 pros::Imu imu(10);
 
 // odometry settings
-lemlib::OdomSensors sensors(nullptr, 
+lemlib::OdomSensors sensors(
+	nullptr, 
 	nullptr, 
 	nullptr, 
 	nullptr, 
@@ -82,7 +98,6 @@ lemlib::Chassis chassis(
 
 void on_center_button() {}
 
-
 void initialize() {
 	pros::lcd::initialize(); // initialize brain screen
     chassis.calibrate(); // calibrate sensors
@@ -105,6 +120,7 @@ void competition_initialize() {}
 void autonomous() {}
 
 void opcontrol() {
+	bool pistonToogle = false;
 	while (true) {
 
 		int leftY = master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
@@ -114,5 +130,91 @@ void opcontrol() {
 		right_motors.move(rightX);
 
 		pros::delay(20);
+
+		if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)){
+			intake_motor_1.move(600);
+		} else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
+			intake_motor_1.move(-600);
+		} else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)){
+			intake_motor_1.move(600);
+		} else {
+			intake_motor_1.move(0);
+		}
+
+		if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)){
+			intake_motor_2.move(600);
+		} else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
+			intake_motor_2.move(-600);
+		} else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)){
+			intake_motor_2.move(600);
+		} else {
+			intake_motor_2.move(0);
+		}
+
+		if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)){
+			outake_motor_1.move(300);
+		} else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
+			outake_motor_1.move(-300);
+		} else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)){
+			outake_motor_1.move(300);
+		} else {
+			outake_motor_1.move(0);
+		}
+
+
+		if(master.get_digital(pros::E_CONTROLLER_DIGITAL_B)){
+			if(pistonToogle == false){
+				blocker1.extend();
+				blocker2.extend();
+				pros::delay(200);
+				pistonToogle = true;
+			}
+			else{
+				blocker1.retract();
+				blocker2.retract();
+				pros::delay(200);
+				pistonToogle = false;
+			}
+		} 
+
+		if(master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)){
+			if(pistonToogle == false){
+				intake1.extend();
+				pros::delay(200);
+				pistonToogle = true;
+			}
+			else{
+				intake1.retract();
+				pros::delay(200);
+				pistonToogle = false;
+			}
+		}
+		if(master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)){
+			if(pistonToogle == false){
+				tounge.extend();
+				pros::delay(200);
+				pistonToogle = true;
+			}
+			else{
+				tounge.retract();
+				pros::delay(200);
+				pistonToogle = false;
+			}
+		}
+		if(master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)){
+			if(pistonToogle == false){
+				lift.extend();
+				pros::delay(200);
+				pistonToogle = true;
+			}
+			else{
+				lift.retract();
+				pros::delay(200);
+				pistonToogle = false;
+			}
+		}
+
+		pros::delay(10);
+		
 	}
 }
