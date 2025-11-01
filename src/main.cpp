@@ -8,6 +8,7 @@
 // check reversed motors, motor types
 // make sure to specificy the motor type(green, red, etc.)
 // if you need anything to be faster change the delays to be less
+// change ports to what you need them to be, e.g. just change the port number
 
 pros::Controller master(pros::E_CONTROLLER_MASTER);
 
@@ -32,9 +33,9 @@ lemlib::Drivetrain drivetrain(
 	&left_motors, 
 	&right_motors, 
 	10, // measure the distance between the left and right wheels
-	lemlib::Omniwheel::NEW_275, 
+	lemlib::Omniwheel::NEW_275, // wheel diameter, if it is 3.25 then use lemlib::Omniwheel::OLD_325, if it is 4 then use lemlib::Omniwheel::NEW_4, if it is 2.75 then use lemlib::Omniwheel::NEW_275, etc.
 	420,
-	2
+	2 // ignore
 );
 
 pros::Imu imu(10);
